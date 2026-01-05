@@ -8,8 +8,8 @@ qrcode[pil]>=7.4.0
 Pillow>=10.0.0
 
 # QR Code scanning (headless build works on Streamlit Cloud/Linux servers)
-# Pin to a modern build to avoid common manylinux/NumPy ABI issues.
-opencv-python-headless>=4.10.0.84
+# Use headless version to avoid GUI dependencies on cloud environments
+opencv-python-headless>=4.8.0
 
 # Other utilities
 # Keep NumPy <2 for maximum binary-wheel compatibility on hosted Linux.
