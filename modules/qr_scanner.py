@@ -13,6 +13,17 @@ from typing import Any, List, Optional, Tuple
 from PIL import Image
 
 
+def _require_cv2():
+    try:
+        import cv2  # type: ignore
+    except Exception as e:
+        raise ImportError(
+            "OpenCV (cv2) is required for QR scanning. "
+            "Ensure 'opencv-python-headless' is installed (recommended for Streamlit Cloud/Linux)."
+        ) from e
+    return cv2
+
+
 def decode_qr_from_image(image_bgr) -> List[dict]:
     """Decode QR code(s) from an image array.
 
@@ -22,7 +33,7 @@ def decode_qr_from_image(image_bgr) -> List[dict]:
     Returns:
         List[dict]: Each item contains at least {"data": str, "points": Optional[np.ndarray]}.
     """
-    import cv2
+    cv2 = _require_cv2()
     import numpy as np
     
     results: List[dict] = []
@@ -61,7 +72,7 @@ def decode_qr_from_uploaded_file(uploaded_file) -> Tuple[Optional[str], str]:
     Returns:
         Tuple[Optional[str], str]: (QR code data, message)
     """
-    import cv2
+    cv2 = _require_cv2()
     import numpy as np
     
     try:
@@ -121,7 +132,7 @@ def draw_qr_bounding_box(image, decoded_objects: list):
     Returns:
         np.ndarray: Image with bounding boxes drawn
     """
-    import cv2
+    cv2 = _require_cv2()
     import numpy as np
     
     img_copy = image.copy()
@@ -153,14 +164,14 @@ class WebcamScanner:
         Args:
             camera_id: Camera device ID
         """
-        import cv2
+        _require_cv2()
         
         self.camera_id = camera_id
         self.cap = None
     
     def start(self):
         """Start the webcam capture."""
-        import cv2
+        cv2 = _require_cv2()
         
         self.cap = cv2.VideoCapture(self.camera_id)
     
@@ -207,7 +218,7 @@ def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional[Any]]
         Tuple[Optional[str], str, Optional[Any]]:
             (QR code data, message, processed image)
     """
-    import cv2
+    cv2 = _require_cv2()
     import numpy as np
     
     try:
