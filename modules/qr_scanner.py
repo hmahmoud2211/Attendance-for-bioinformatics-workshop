@@ -10,12 +10,10 @@ Implementation note:
 import io
 from typing import List, Optional, Tuple
 
-import cv2
-import numpy as np
 from PIL import Image
 
 
-def decode_qr_from_image(image_bgr: np.ndarray) -> List[dict]:
+def decode_qr_from_image(image_bgr) -> List[dict]:
     """Decode QR code(s) from an image array.
 
     Args:
@@ -24,6 +22,9 @@ def decode_qr_from_image(image_bgr: np.ndarray) -> List[dict]:
     Returns:
         List[dict]: Each item contains at least {"data": str, "points": Optional[np.ndarray]}.
     """
+    import cv2
+    import numpy as np
+    
     results: List[dict] = []
 
     try:
@@ -60,6 +61,9 @@ def decode_qr_from_uploaded_file(uploaded_file) -> Tuple[Optional[str], str]:
     Returns:
         Tuple[Optional[str], str]: (QR code data, message)
     """
+    import cv2
+    import numpy as np
+    
     try:
         # Read image from uploaded file
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
@@ -106,7 +110,7 @@ def parse_qr_data(qr_data: str) -> Tuple[Optional[str], Optional[str]]:
         return None, None
 
 
-def draw_qr_bounding_box(image: np.ndarray, decoded_objects: list) -> np.ndarray:
+def draw_qr_bounding_box(image, decoded_objects: list):
     """
     Draw bounding boxes around detected QR codes.
     
@@ -117,6 +121,9 @@ def draw_qr_bounding_box(image: np.ndarray, decoded_objects: list) -> np.ndarray
     Returns:
         np.ndarray: Image with bounding boxes drawn
     """
+    import cv2
+    import numpy as np
+    
     img_copy = image.copy()
     
     for obj in decoded_objects:
@@ -146,11 +153,15 @@ class WebcamScanner:
         Args:
             camera_id: Camera device ID
         """
+        import cv2
+        
         self.camera_id = camera_id
         self.cap = None
     
     def start(self):
         """Start the webcam capture."""
+        import cv2
+        
         self.cap = cv2.VideoCapture(self.camera_id)
     
     def stop(self):
@@ -159,12 +170,12 @@ class WebcamScanner:
             self.cap.release()
             self.cap = None
     
-    def capture_frame(self) -> Optional[np.ndarray]:
+    def capture_frame(self) -> Optional:
         """
         Capture a single frame from the webcam.
         
         Returns:
-            Optional[np.ndarray]: Captured frame or None
+            Optional: Captured frame or None
         """
         if self.cap is not None and self.cap.isOpened():
             ret, frame = self.cap.read()
@@ -172,7 +183,7 @@ class WebcamScanner:
                 return frame
         return None
     
-    def scan_frame(self, frame: np.ndarray) -> List[dict]:
+    def scan_frame(self, frame) -> List[dict]:
         """
         Scan a frame for QR codes.
         
@@ -185,7 +196,7 @@ class WebcamScanner:
         return decode_qr_from_image(frame)
 
 
-def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional[np.ndarray]]:
+def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional]:
     """
     Process webcam image data for QR code detection.
     
@@ -193,9 +204,12 @@ def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional[np.nd
         image_data: Image data from Streamlit's camera_input
         
     Returns:
-        Tuple[Optional[str], str, Optional[np.ndarray]]: 
+        Tuple[Optional[str], str, Optional]: 
             (QR code data, message, processed image)
     """
+    import cv2
+    import numpy as np
+    
     try:
         # Convert bytes to PIL Image
         image = Image.open(io.BytesIO(image_data.getvalue()))
