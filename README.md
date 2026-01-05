@@ -31,18 +31,9 @@ A comprehensive Streamlit web application for managing event attendance using QR
 - Python 3.8 or higher
 - pip (Python package manager)
 
-### Windows Additional Requirement
+### Hosted/Cloud Compatibility Note
 
-For QR code scanning with `pyzbar`, you need to install the Visual C++ Redistributable:
-
-1. Download from: https://aka.ms/vs/17/release/vc_redist.x64.exe
-2. Install the redistributable
-3. Restart your terminal/IDE
-
-Alternatively, you can install `zbar` using conda:
-```bash
-conda install -c conda-forge zbar
-```
+This project uses OpenCV's built-in `QRCodeDetector` and the `opencv-python-headless` package so it runs cleanly on Streamlit Cloud/Linux servers without requiring system GUI libraries or `zbar`.
 
 ### Setup Instructions
 
@@ -175,10 +166,8 @@ user3@example.com
 - Check if your email provider allows SMTP access
 - Verify internet connection
 
-### pyzbar Installation Issues on Windows
-If you get an error about missing DLLs:
-1. Install Visual C++ Redistributable
-2. Or use: `pip install pyzbar[windows]`
+### OpenCV Import Issues
+If you see OpenCV import errors on servers, ensure `opencv-python-headless` is installed (it is included in `requirements.txt`).
 
 ## 📄 License
 

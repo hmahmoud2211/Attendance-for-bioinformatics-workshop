@@ -1,52 +1,52 @@
-"""
-QR Code Scanner Module
+"""QR Code Scanner Module.
 
 This module handles QR code scanning from images and webcam.
+
+Implementation note:
+- Uses OpenCV's built-in QRCodeDetector to avoid external system dependencies
+    (e.g., `zbar`) that often break in hosted environments like Streamlit Cloud.
 """
+
+import io
+from typing import List, Optional, Tuple
 
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
 from PIL import Image
-from typing import Optional, Tuple, List
-import io
 
 
-def decode_qr_from_image(image: np.ndarray) -> List[dict]:
-    """
-    Decode QR code(s) from an image array.
-    
+def decode_qr_from_image(image_bgr: np.ndarray) -> List[dict]:
+    """Decode QR code(s) from an image array.
+
     Args:
-        image: NumPy array of the image (BGR format from OpenCV)
-        
+        image_bgr: NumPy array of the image (BGR format from OpenCV)
+
     Returns:
-        List[dict]: List of decoded QR code data
+        List[dict]: Each item contains at least {"data": str, "points": Optional[np.ndarray]}.
     """
-    results = []
-    
+    results: List[dict] = []
+
     try:
-        # Convert to grayscale for better detection
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
-        # Try decoding QR codes
-        decoded_objects = decode(gray)
-        
-        # If no results, try with the original image
-        if not decoded_objects:
-            decoded_objects = decode(image)
-        
-        for obj in decoded_objects:
-            if obj.type == 'QRCODE':
-                data = obj.data.decode('utf-8')
-                results.append({
-                    "data": data,
-                    "type": obj.type,
-                    "rect": obj.rect
-                })
-    
+        detector = cv2.QRCodeDetector()
+
+        # OpenCV versions vary: prefer detectAndDecodeMulti when available.
+        if hasattr(detector, "detectAndDecodeMulti"):
+            ok, decoded_info, points, _ = detector.detectAndDecodeMulti(image_bgr)
+            if ok and decoded_info is not None:
+                for idx, data in enumerate(decoded_info):
+                    if data:
+                        pts = None
+                        if points is not None and len(points) > idx:
+                            pts = points[idx]
+                        results.append({"data": data, "points": pts})
+        else:
+            data, points, _ = detector.detectAndDecode(image_bgr)
+            if data:
+                results.append({"data": data, "points": points})
+
     except Exception as e:
         print(f"Error decoding QR code: {e}")
-    
+
     return results
 
 
@@ -120,19 +120,14 @@ def draw_qr_bounding_box(image: np.ndarray, decoded_objects: list) -> np.ndarray
     img_copy = image.copy()
     
     for obj in decoded_objects:
-        # Draw rectangle
-        points = obj.polygon
-        if len(points) == 4:
-            pts = np.array(points, dtype=np.int32)
+        pts = obj.get("points")
+        if pts is None:
+            continue
+
+        pts = np.array(pts, dtype=np.int32)
+        if pts.ndim == 2:
             pts = pts.reshape((-1, 1, 2))
-            cv2.polylines(img_copy, [pts], True, (0, 255, 0), 3)
-        else:
-            # Use bounding rect if polygon is not available
-            rect = obj.rect
-            cv2.rectangle(img_copy, 
-                         (rect.left, rect.top), 
-                         (rect.left + rect.width, rect.top + rect.height),
-                         (0, 255, 0), 3)
+        cv2.polylines(img_copy, [pts], True, (0, 255, 0), 3)
     
     return img_copy
 
@@ -216,22 +211,12 @@ def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional[np.nd
         
         # Decode QR codes
         decoded = decode_qr_from_image(image_bgr)
-        
+
         # Draw bounding boxes on detected QR codes
         if decoded:
-            # Get the raw decoded objects for drawing
-            gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-            raw_decoded = decode(gray)
-            if not raw_decoded:
-                raw_decoded = decode(image_bgr)
-            
-            if raw_decoded:
-                processed_img = draw_qr_bounding_box(image_bgr, raw_decoded)
-                # Convert back to RGB for display
-                processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
-            else:
-                processed_img = image_array
-            
+            processed_img = draw_qr_bounding_box(image_bgr, decoded)
+            processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
+
             qr_data = decoded[0]["data"]
             return qr_data, "QR code detected!", processed_img
         else:
