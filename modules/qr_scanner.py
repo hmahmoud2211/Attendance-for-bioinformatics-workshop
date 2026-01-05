@@ -8,7 +8,7 @@ Implementation note:
 """
 
 import io
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from PIL import Image
 
@@ -170,12 +170,12 @@ class WebcamScanner:
             self.cap.release()
             self.cap = None
     
-    def capture_frame(self) -> Optional:
+    def capture_frame(self) -> Optional[Any]:
         """
         Capture a single frame from the webcam.
         
         Returns:
-            Optional: Captured frame or None
+            Optional[Any]: Captured frame or None
         """
         if self.cap is not None and self.cap.isOpened():
             ret, frame = self.cap.read()
@@ -196,7 +196,7 @@ class WebcamScanner:
         return decode_qr_from_image(frame)
 
 
-def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional]:
+def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional[Any]]:
     """
     Process webcam image data for QR code detection.
     
@@ -204,7 +204,7 @@ def process_webcam_image(image_data) -> Tuple[Optional[str], str, Optional]:
         image_data: Image data from Streamlit's camera_input
         
     Returns:
-        Tuple[Optional[str], str, Optional]: 
+        Tuple[Optional[str], str, Optional[Any]]:
             (QR code data, message, processed image)
     """
     import cv2
